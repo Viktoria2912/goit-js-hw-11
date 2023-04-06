@@ -31,12 +31,20 @@ const observer = new IntersectionObserver(function ([entry], observer) {
 function onSearch(e) {
   e.preventDefault();
 
-  picturesAPIService.query = e.currentTarget.elements.searchQuery.value;
+  picturesAPIService.query = e.currentTarget.elements.searchQuery.value.trim();
+  if (!picturesAPIService.query) {
+    Notiflix.Notify.info('Please, write something!');
+    return;
+  }
   picturesAPIService.resetPage();
   refs.loadMoreBtn.classList.add('ishidden');
-  picturesAPIService
-    .fetchPictures()
-    .then(data => {
+
+  const fetchCards = async () => {
+    try {
+      const response = await picturesAPIService.fetchPictures();
+      const data = await response;
+      console.log(data);
+
       if (data.hits.length === 0) {
         Notiflix.Notify.info(
           'Sorry, there are no images matching your search query. Please try again.'
@@ -46,17 +54,44 @@ function onSearch(e) {
       const markUp = createPicturesMarkup(data.hits);
       appendPicturesCardMarcup(markUp);
       lightbox.refresh();
-      Notiflix.Notify.info(`Hooray! We found ${data.totalHits} images.`);
+      if (data.hits.length > 0) {
+        Notiflix.Notify.info(`Hooray! We found ${data.totalHits} images.`);
+      }
 
       refs.loadMoreBtn.classList.remove('ishidden');
-    })
-    .catch(error => console.log(error));
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  fetchCards();
+
+  // picturesAPIService
+  //   .fetchPictures()
+  //   .then(data => {
+  //     if (data.hits.length === 0) {
+  //       Notiflix.Notify.info(
+  //         'Sorry, there are no images matching your search query. Please try again.'
+  //       );
+  //     }
+  //     clearPicturesContainer();
+  //     const markUp = createPicturesMarkup(data.hits);
+  //     appendPicturesCardMarcup(markUp);
+  //     lightbox.refresh();
+  //     Notiflix.Notify.info(`Hooray! We found ${data.totalHits} images.`);
+
+  //     refs.loadMoreBtn.classList.remove('ishidden');
+  //   })
+  //   .catch(error => console.log(error));
 }
 
 function onLoadMore(e) {
-  picturesAPIService
-    .fetchPictures()
-    .then(data => {
+  const fetchCards = async () => {
+    try {
+      const response = await picturesAPIService.fetchPictures();
+      const data = await response;
+      console.log(data);
+
       const markUp = createPicturesMarkup(data.hits);
       appendPicturesCardMarcup(markUp);
       lightbox.refresh();
@@ -68,8 +103,29 @@ function onLoadMore(e) {
       }
 
       console.log(lightbox);
-    })
-    .catch(error => console.log(error));
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  fetchCards();
+
+  // picturesAPIService
+  //   .fetchPictures()
+  //   .then(data => {
+  //     const markUp = createPicturesMarkup(data.hits);
+  //     appendPicturesCardMarcup(markUp);
+  //     lightbox.refresh();
+  //     if (picturesAPIService.page - 1 >= data.totalHits / 40) {
+  //       Notiflix.Notify.info(
+  //         "We're sorry, but you've reached the end of search results."
+  //       );
+  //       refs.loadMoreBtn.classList.add('ishidden');
+  //     }
+
+  //     console.log(lightbox);
+  //   })
+  //   .catch(error => console.log(error));
 }
 
 function appendPicturesCardMarcup(markUp) {
